@@ -14,35 +14,37 @@ export default function Login() {
     e.preventDefault()
 
     if (!email || !password) {
-      alert("ALl fields are re...")
+      alert("All fields are required")
       return
     }
 
     try {
       const res = await login(email, password)
-      console.log(res.data.accessToken)
 
       if (!res.data.accessToken) {
-        alert("Login fail")
+        alert("Login failed")
         return
       }
-      
+
       await localStorage.setItem("accessToken", res.data.accessToken)
       await localStorage.setItem("refreshToken", res.data.refreshToken)
 
-      // import { getMyDetails, login } from "../services/auth"
       const detail = await getMyDetails()
+      console.log(detail)
 
-      // save userdata redux
-      // auth contex
+      if (!detail.data.isActive) {
+        alert("Your account is disabled. Contact admin.")
+        localStorage.removeItem("accessToken")
+        localStorage.removeItem("refreshToken")
+        return
+      }
+
       setUser(detail.data)
-
       navigate("/")
     } catch (err) {
       console.error(err)
+      alert("Login failed. Please check your credentials.")
     }
-    // api call
-    // redirect to /home
   }
 
   return (

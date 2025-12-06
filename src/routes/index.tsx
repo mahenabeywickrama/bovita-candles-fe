@@ -9,6 +9,7 @@ const Login = lazy(() => import("../pages/Login"))
 const Register = lazy(() => import("../pages/Register"))
 const UserDashboard = lazy(() => import("../pages/UserDashboard"))
 const AdminDashboard = lazy(() => import("../pages/AdminDashboard"))
+const Users = lazy(() => import("../pages/Users"))
 
 // const Post = lazy(() => import("../pages/Post"))
 // const MyPost = lazy(() => import("../pages/MyPost"))
@@ -82,6 +83,7 @@ export default function Router() {
             }
           >
             <Route index element={<AdminDashboard />} />
+            <Route path="users" element={<Users />} />
           </Route>
         </Routes>
       </Suspense>
