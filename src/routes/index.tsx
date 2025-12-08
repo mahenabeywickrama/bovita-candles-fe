@@ -18,7 +18,6 @@ type RequireAuthTypes = { children: ReactNode; roles?: string[] }
 
 const RequireAuth = ({ children, roles }: RequireAuthTypes) => {
   const { user, loading } = useAuth()
-  console.log("RequireAuth", { user, roles })
 
   if (loading) {
     return (

@@ -6,7 +6,7 @@ export interface UserType {
   lastname: string
   email: string
   role: "USER" | "ADMIN"
-  disabled?: boolean
+  isActive?: boolean
 }
 
 // Get all users
@@ -28,6 +28,7 @@ export interface UpdateUserType {
   email?: string
   role?: "USER" | "ADMIN"
 }
+
 export const updateUser = async (id: string, data: UpdateUserType) => {
   const res = await api.put(`/auth/admin/users/${id}`, data)
   return res.data
@@ -44,3 +45,17 @@ export const deleteUser = async (id: string) => {
   const res = await api.delete(`/auth/admin/users/${id}`)
   return res.data
 }
+
+export interface CreateAdmin {
+  firstname: string;
+  lastname: string;
+  email: string;
+  password: string;
+  role: "ADMIN";
+}
+
+// Create a new admin user
+export const createAdmin = async (data: CreateAdmin) => {
+  const res = await api.post("/auth/admin/register", data);
+  return res.data;
+};
