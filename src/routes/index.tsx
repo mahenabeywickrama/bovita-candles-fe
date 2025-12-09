@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
 import { useAuth } from "../context/authContext"
 import Layout from "../components/Layout"
 import AdminLayout from "../components/AdminLayout"
+import Products from "../pages/Products"
 
 const Home = lazy(() => import("../pages/Home"))
 const Login = lazy(() => import("../pages/Login"))
@@ -83,6 +84,7 @@ export default function Router() {
           >
             <Route index element={<AdminDashboard />} />
             <Route path="users" element={<Users />} />
+            <Route path="products" element={<Products />} />
           </Route>
         </Routes>
       </Suspense>
