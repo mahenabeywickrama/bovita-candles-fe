@@ -1,233 +1,207 @@
-import { useEffect, useState } from "react"
-import { createProduct, getProducts, type ProductType } from "../services/product"
+import { useEffect, useState } from "react";
+import { getProducts } from "../services/product";
+import type { ProductType } from "../services/product";
+
+const CATEGORIES = ["ALL", "JAR", "NORMAL", "LUXURY"] as const;
 
 export default function Products() {
-  const [products, setProducts] = useState<ProductType[]>([])
-  const [loading, setLoading] = useState(true)
-  const [showAddModal, setShowAddModal] = useState(false)
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
+  const [products, setProducts] = useState<ProductType[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Form state
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    category: "",
-    fragrance: "",
-    size: "",
-    price: "",
-    stock: "",
-  })
-  const [images, setImages] = useState<FileList | null>(null)
+  // Filters
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("ALL");
+  const [minPrice, setMinPrice] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [sortBy, setSortBy] = useState("default");
 
-  const fetchProducts = async () => {
-    setLoading(true)
-    try {
-      const res = await getProducts(page, 10)
-      setProducts(res.data)
-      setTotalPages(res.totalPages)
-    } catch (err) {
-      console.error(err)
-    }
-    setLoading(false)
-  }
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   useEffect(() => {
-    fetchProducts()
-  }, [page])
+    loadProducts();
+  }, [category, minPrice, maxPrice, sortBy, search]);
 
-  const handleCreate = async () => {
-    if (!images || images.length === 0) {
-        alert("Please select at least 1 image")
-        return
-    }
-
-    const fd = new FormData()
-    Object.entries(form).forEach(([key, value]) => fd.append(key, value))
-    Array.from(images).forEach(img => fd.append("images", img))
-
+  const loadProducts = async () => {
+    setLoading(true);
     try {
-        await createProduct(fd)
+      const res = await getProducts(1, 200);
+      let data: ProductType[] = res.data;
 
-        // RESET FORM AFTER SUCCESS
-        setForm({
-        title: "",
-        description: "",
-        category: "",
-        fragrance: "",
-        size: "",
-        price: "",
-        stock: "",
-        })
+      // SEARCH FILTER
+      if (search.trim() !== "") {
+        data = data.filter((p) =>
+          p.title.toLowerCase().includes(search.toLowerCase())
+        );
+      }
 
-        setImages(null)
+      // CATEGORY FILTER
+      if (category !== "ALL") {
+        data = data.filter((p) => p.category === category);
+      }
 
-        // CLEAR ACTUAL FILE INPUT
-        const fileInput = document.getElementById("product-images") as HTMLInputElement
-        if (fileInput) fileInput.value = ""
+      // PRICE FILTER
+      if (minPrice) data = data.filter((p) => p.price >= Number(minPrice));
+      if (maxPrice) data = data.filter((p) => p.price <= Number(maxPrice));
 
-        setShowAddModal(false)
-        fetchProducts()
+      // SORTING
+      if (sortBy === "price_low") data.sort((a, b) => a.price - b.price);
+      if (sortBy === "price_high") data.sort((a, b) => b.price - a.price);
+      if (sortBy === "name_asc")
+        data.sort((a, b) => a.title.localeCompare(b.title));
+      if (sortBy === "name_desc")
+        data.sort((a, b) => b.title.localeCompare(a.title));
 
-    } catch (err) {
-        console.error(err)
-        alert("Failed to create product")
+      setProducts(data);
+      setCurrentPage(1); // reset page
+
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+    } finally {
+      setLoading(false);
     }
-  }
+  };
+
+  // Pagination logic
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentItems = products.slice(indexOfFirstItem, indexOfLastItem);
+
+  const totalPages = Math.ceil(products.length / itemsPerPage);
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-3xl font-bold">Product Management</h1>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+    <div className="container mx-auto px-6 py-10">
+
+      <h1 className="text-3xl font-bold mb-6">Our Products</h1>
+
+      {/* ---------------- FILTER BAR ---------------- */}
+      <div className="flex flex-wrap gap-4 items-center mb-8">
+
+        {/* SEARCH BAR */}
+        <input
+          type="text"
+          placeholder="Search products..."
+          className="border px-4 py-2 rounded w-full sm:w-64"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        {/* CATEGORY FILTER */}
+        <div className="flex gap-2 flex-wrap">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat}
+              onClick={() => setCategory(cat)}
+              className={`px-4 py-2 rounded-full border 
+                ${category === cat ? "bg-black text-white" : "bg-white"}
+              `}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
+
+        {/* PRICE FILTER */}
+        <div className="flex gap-3">
+          <input
+            type="number"
+            placeholder="Min Price"
+            className="border px-3 py-1 rounded w-28"
+            value={minPrice}
+            onChange={(e) => setMinPrice(e.target.value)}
+          />
+          <input
+            type="number"
+            placeholder="Max Price"
+            className="border px-3 py-1 rounded w-28"
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+          />
+        </div>
+
+        {/* SORT BY */}
+        <select
+          className="border px-3 py-1 rounded"
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value)}
         >
-          + Add Product
-        </button>
+          <option value="default">Sort By</option>
+          <option value="price_low">Price: Low → High</option>
+          <option value="price_high">Price: High → Low</option>
+          <option value="name_asc">Name: A → Z</option>
+          <option value="name_desc">Name: Z → A</option>
+        </select>
       </div>
 
+      {/* ---------------- PRODUCT GRID ---------------- */}
       {loading ? (
-        <p>Loading products...</p>
+        <p>Loading...</p>
+      ) : currentItems.length === 0 ? (
+        <p className="text-gray-600">No products found.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {products.map((p) => (
-            <div key={p._id} className="border rounded-lg shadow p-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {currentItems.map((product) => (
+            <div
+              key={product._id}
+              className="bg-white shadow rounded-lg overflow-hidden hover:scale-[1.02] transition"
+            >
               <img
-                src={p.imageUrls[0]}
-                alt={p.title}
-                className="w-full h-40 object-cover rounded"
+                src={product.imageUrls[0]}
+                className="h-48 w-full object-cover"
+                alt={product.title}
               />
-              <h2 className="text-xl font-semibold mt-2">{p.title}</h2>
-              <p className="text-gray-600">{p.category}</p>
-              <p className="font-bold text-green-600 mt-1">${p.price}</p>
-              <p className="text-sm text-gray-500">Stock: {p.stock}</p>
+              <div className="p-4">
+                <h2 className="text-lg font-semibold">{product.title}</h2>
+                <p className="text-gray-600 text-sm">{product.category}</p>
+                <p className="font-bold mt-2">Rs. {product.price}</p>
+              </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* PAGINATION */}
-      <div className="flex justify-center gap-3 mt-6">
-        <button
-          disabled={page === 1}
-          className="px-3 py-1 bg-gray-300 rounded disabled:bg-gray-200"
-          onClick={() => setPage((p) => p - 1)}
-        >
-          Prev
-        </button>
-        <span className="font-semibold">
-          {page} / {totalPages}
-        </span>
-        <button
-          disabled={page === totalPages}
-          className="px-3 py-1 bg-gray-300 rounded disabled:bg-gray-200"
-          onClick={() => setPage((p) => p + 1)}
-        >
-          Next
-        </button>
-      </div>
+      {/* ---------------- PAGINATION ---------------- */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-10 gap-2">
 
-      {/* ADD PRODUCT MODAL */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-            <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
-            <h2 className="text-2xl font-bold mb-4">Add New Product</h2>
+          {/* PREVIOUS */}
+          <button
+            onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+            className="px-4 py-2 border rounded disabled:opacity-40"
+            disabled={currentPage === 1}
+          >
+            Previous
+          </button>
 
-            <div className="flex flex-col gap-3">
+          {/* PAGE NUMBERS */}
+          {[...Array(totalPages)].map((_, index) => (
+            <button
+              key={index}
+              onClick={() => setCurrentPage(index + 1)}
+              className={`px-4 py-2 border rounded ${
+                currentPage === index + 1
+                  ? "bg-black text-white"
+                  : "bg-white"
+              }`}
+            >
+              {index + 1}
+            </button>
+          ))}
 
-                {/* Title */}
-                <input
-                type="text"
-                placeholder="Title"
-                className="p-2 border rounded"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                />
+          {/* NEXT */}
+          <button
+            onClick={() =>
+              currentPage < totalPages && setCurrentPage(currentPage + 1)
+            }
+            className="px-4 py-2 border rounded disabled:opacity-40"
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </button>
 
-                {/* Description */}
-                <textarea
-                placeholder="Description"
-                className="p-2 border rounded"
-                value={form.description}
-                onChange={(e) => setForm({ ...form, description: e.target.value })}
-                />
-
-                {/* CATEGORY DROPDOWN */}
-                <select
-                className="p-2 border rounded"
-                value={form.category}
-                onChange={(e) => setForm({ ...form, category: e.target.value })}
-                >
-                <option value="">Select Category</option>
-                <option value="JAR">JAR</option>
-                <option value="NORMAL">NORMAL</option>
-                <option value="LUXURY">LUXURY</option>
-                </select>
-
-                {/* Fragrance */}
-                <input
-                type="text"
-                placeholder="Fragrance (optional)"
-                className="p-2 border rounded"
-                value={form.fragrance}
-                onChange={(e) => setForm({ ...form, fragrance: e.target.value })}
-                />
-
-                {/* Size */}
-                <input
-                type="text"
-                placeholder="Size (ex: 200g)"
-                className="p-2 border rounded"
-                value={form.size}
-                onChange={(e) => setForm({ ...form, size: e.target.value })}
-                />
-
-                {/* Price */}
-                <input
-                type="number"
-                placeholder="Price"
-                className="p-2 border rounded"
-                value={form.price}
-                onChange={(e) => setForm({ ...form, price: e.target.value })}
-                />
-
-                {/* Stock */}
-                <input
-                type="number"
-                placeholder="Stock"
-                className="p-2 border rounded"
-                value={form.stock}
-                onChange={(e) => setForm({ ...form, stock: e.target.value })}
-                />
-
-                {/* Images */}
-                <input
-                type="file"
-                multiple
-                className="p-2 border rounded"
-                onChange={(e) => setImages(e.target.files)}
-                />
-            </div>
-
-            <div className="flex justify-end gap-3 mt-4">
-                <button
-                onClick={() => setShowAddModal(false)}
-                className="px-4 py-2 bg-gray-300 rounded"
-                >
-                Cancel
-                </button>
-
-                <button
-                onClick={handleCreate}
-                className="px-4 py-2 bg-blue-600 text-white rounded"
-                >
-                Save Product
-                </button>
-            </div>
-            </div>
         </div>
-        )}
+      )}
     </div>
-  )
+  );
 }

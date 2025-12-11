@@ -3,14 +3,15 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
 import { useAuth } from "../context/authContext"
 import Layout from "../components/Layout"
 import AdminLayout from "../components/AdminLayout"
-import Products from "../pages/Products"
 
 const Home = lazy(() => import("../pages/Home"))
+const Products = lazy(() => import("../pages/Products"))
 const Login = lazy(() => import("../pages/Login"))
 const Register = lazy(() => import("../pages/Register"))
 const UserDashboard = lazy(() => import("../pages/UserDashboard"))
 const AdminDashboard = lazy(() => import("../pages/AdminDashboard"))
-const Users = lazy(() => import("../pages/Users"))
+const AdminUsers = lazy(() => import("../pages/AdminUsers"))
+const AdminProducts = lazy(() => import("../pages/AdminProducts"))
 
 // const Post = lazy(() => import("../pages/Post"))
 // const MyPost = lazy(() => import("../pages/MyPost"))
@@ -57,6 +58,7 @@ export default function Router() {
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
+            <Route path="/products" element={<Products />} />
 
             {/* User Dashboard */}
             <Route
@@ -83,8 +85,8 @@ export default function Router() {
             }
           >
             <Route index element={<AdminDashboard />} />
-            <Route path="users" element={<Users />} />
-            <Route path="products" element={<Products />} />
+            <Route path="users" element={<AdminUsers />} />
+            <Route path="products" element={<AdminProducts />} />
           </Route>
         </Routes>
       </Suspense>

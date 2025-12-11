@@ -8,7 +8,7 @@ import {
   createAdmin, // ⭐ NEW
 } from "../services/admin"
 
-export default function Users() {
+export default function AdminUsers() {
   const [users, setUsers] = useState<UserType[]>([])
   const [loading, setLoading] = useState(true)
 
