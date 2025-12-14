@@ -1,12 +1,18 @@
 import { useEffect, useState } from "react";
 import { getProducts } from "../services/product";
 import type { ProductType } from "../services/product";
+import { useCart } from "../context/cartContext"
+
 
 const CATEGORIES = ["ALL", "JAR", "NORMAL", "LUXURY"] as const;
 
 export default function Products() {
   const [products, setProducts] = useState<ProductType[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // 🔹 MODAL STATE
+  const [selectedProduct, setSelectedProduct] =
+    useState<ProductType | null>(null);
 
   // Filters
   const [search, setSearch] = useState("");
@@ -54,8 +60,7 @@ export default function Products() {
         data.sort((a, b) => b.title.localeCompare(a.title));
 
       setProducts(data);
-      setCurrentPage(1); // reset page
-
+      setCurrentPage(1);
     } catch (error) {
       console.error("Failed to fetch products:", error);
     } finally {
@@ -63,12 +68,24 @@ export default function Products() {
     }
   };
 
-  // Pagination logic
+  // Pagination
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = products.slice(indexOfFirstItem, indexOfLastItem);
 
   const totalPages = Math.ceil(products.length / itemsPerPage);
+
+  const [activeImage, setActiveImage] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    if (selectedProduct) {
+      setActiveImage(0);
+      setQuantity(1);
+    }
+  }, [selectedProduct]);
+
+  const { addToCart } = useCart()
 
   return (
     <div className="container mx-auto px-6 py-10">
@@ -93,9 +110,9 @@ export default function Products() {
             <button
               key={cat}
               onClick={() => setCategory(cat)}
-              className={`px-4 py-2 rounded-full border 
-                ${category === cat ? "bg-black text-white" : "bg-white"}
-              `}
+              className={`px-4 py-2 rounded-full border ${
+                category === cat ? "bg-black text-white" : "bg-white"
+              }`}
             >
               {cat}
             </button>
@@ -144,7 +161,8 @@ export default function Products() {
           {currentItems.map((product) => (
             <div
               key={product._id}
-              className="bg-white shadow rounded-lg overflow-hidden hover:scale-[1.02] transition"
+              onClick={() => setSelectedProduct(product)}
+              className="bg-white shadow rounded-lg overflow-hidden hover:scale-[1.02] transition cursor-pointer"
             >
               <img
                 src={product.imageUrls[0]}
@@ -167,39 +185,167 @@ export default function Products() {
 
           {/* PREVIOUS */}
           <button
-            onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
-            className="px-4 py-2 border rounded disabled:opacity-40"
             disabled={currentPage === 1}
+            onClick={() => setCurrentPage((p) => p - 1)}
+            className="px-4 py-2 border rounded disabled:opacity-40"
           >
             Previous
           </button>
 
-          {/* PAGE NUMBERS */}
-          {[...Array(totalPages)].map((_, index) => (
+          {[...Array(totalPages)].map((_, i) => (
             <button
-              key={index}
-              onClick={() => setCurrentPage(index + 1)}
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
               className={`px-4 py-2 border rounded ${
-                currentPage === index + 1
+                currentPage === i + 1
                   ? "bg-black text-white"
                   : "bg-white"
               }`}
             >
-              {index + 1}
+              {i + 1}
             </button>
           ))}
 
           {/* NEXT */}
           <button
-            onClick={() =>
-              currentPage < totalPages && setCurrentPage(currentPage + 1)
-            }
-            className="px-4 py-2 border rounded disabled:opacity-40"
             disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((p) => p + 1)}
+            className="px-4 py-2 border rounded disabled:opacity-40"
           >
             Next
           </button>
+        </div>
+      )}
 
+      {/* ---------------- PRODUCT DETAILS MODAL ---------------- */}
+      {selectedProduct && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
+          onClick={() => setSelectedProduct(null)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-xl max-w-4xl w-full mx-4 relative"
+          >
+            {/* CLOSE */}
+            <button
+              className="absolute top-3 right-3 text-xl text-gray-500 hover:text-black"
+              onClick={() => setSelectedProduct(null)}
+            >
+              ✕
+            </button>
+
+            <div className="grid md:grid-cols-2 gap-8 p-6">
+              {/* ---------- LEFT : IMAGES ---------- */}
+              <div>
+                <img
+                  src={selectedProduct.imageUrls[activeImage]}
+                  className="w-full h-96 object-cover rounded-lg mb-4"
+                  alt={selectedProduct.title}
+                />
+
+                {/* THUMBNAILS */}
+                <div className="flex gap-2">
+                  {selectedProduct.imageUrls.map((img, i) => (
+                    <img
+                      key={i}
+                      src={img}
+                      onClick={() => setActiveImage(i)}
+                      className={`h-20 w-20 object-cover rounded cursor-pointer border
+                        ${
+                          activeImage === i
+                            ? "border-black"
+                            : "border-gray-300"
+                        }`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* ---------- RIGHT : DETAILS ---------- */}
+              <div className="flex flex-col gap-4">
+                <h2 className="text-3xl font-bold">
+                  {selectedProduct.title}
+                </h2>
+
+                {/* CATEGORY */}
+                <span className="w-fit px-3 py-1 rounded-full bg-gray-200 text-sm">
+                  {selectedProduct.category}
+                </span>
+
+                {/* PRICE */}
+                <p className="text-2xl font-bold text-green-700">
+                  Rs. {selectedProduct.price}
+                </p>
+
+                {/* STOCK */}
+                <p
+                  className={`font-semibold ${
+                    selectedProduct.stock > 0
+                      ? "text-green-600"
+                      : "text-red-600"
+                  }`}
+                >
+                  {selectedProduct.stock > 0
+                    ? `In Stock (${selectedProduct.stock})`
+                    : "Out of Stock"}
+                </p>
+
+                {/* DESCRIPTION */}
+                <p className="text-gray-700">
+                  {selectedProduct.description}
+                </p>
+
+                {/* EXTRA INFO */}
+                <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                  <p>
+                    <strong>Size:</strong> {selectedProduct.size}
+                  </p>
+                  <p>
+                    <strong>Fragrance:</strong>{" "}
+                    {selectedProduct.fragrance}
+                  </p>
+                </div>
+
+                {/* QUANTITY */}
+                <div className="flex items-center gap-3">
+                  <span className="font-semibold">Qty:</span>
+                  <button
+                    className="px-3 py-1 border rounded"
+                    disabled={quantity === 1}
+                    onClick={() => setQuantity((q) => q - 1)}
+                  >
+                    −
+                  </button>
+                  <span>{quantity}</span>
+                  <button
+                    className="px-3 py-1 border rounded"
+                    disabled={quantity === selectedProduct.stock}
+                    onClick={() => setQuantity((q) => q + 1)}
+                  >
+                    +
+                  </button>
+                </div>
+
+                {/* ACTION BUTTON */}
+                <button
+                  disabled={selectedProduct.stock === 0}
+                  onClick={() => {
+                    addToCart(selectedProduct, quantity)
+                    setSelectedProduct(null)
+                  }}
+                  className="mt-4 bg-black text-white py-3 rounded-lg hover:bg-gray-800 disabled:opacity-50"
+                >
+                  Add to Cart
+                </button>
+
+                {/* META */}
+                <div className="text-xs text-gray-500 mt-2">
+                  Product ID: {selectedProduct._id}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
