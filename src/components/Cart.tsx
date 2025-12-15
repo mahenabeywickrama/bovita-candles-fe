@@ -1,5 +1,6 @@
 import { FiX } from "react-icons/fi"
 import { useCart } from "../context/cartContext"
+import { useNavigate } from "react-router-dom"
 
 type Props = {
   open: boolean
@@ -7,6 +8,7 @@ type Props = {
 }
 
 export default function CartDrawer({ open, onClose }: Props) {
+  const navigate = useNavigate()
   const { cart, removeFromCart, updateQuantity } = useCart()
 
   const total = cart.reduce(
@@ -106,7 +108,13 @@ export default function CartDrawer({ open, onClose }: Props) {
               <span>Rs. {total}</span>
             </div>
 
-            <button className="w-full bg-black text-white py-3 rounded">
+            <button
+              className="w-full bg-black text-white py-3 rounded"
+              onClick={() => {
+                onClose()         // Close the drawer
+                navigate("/checkout") // Navigate to checkout page
+              }}
+            >
               Checkout
             </button>
           </div>

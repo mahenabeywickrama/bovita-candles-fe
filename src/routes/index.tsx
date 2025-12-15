@@ -12,6 +12,7 @@ const UserDashboard = lazy(() => import("../pages/UserDashboard"))
 const AdminDashboard = lazy(() => import("../pages/AdminDashboard"))
 const AdminUsers = lazy(() => import("../pages/AdminUsers"))
 const AdminProducts = lazy(() => import("../pages/AdminProducts"))
+const Checkout = lazy(() => import("../pages/Checkout"))
 
 // const Post = lazy(() => import("../pages/Post"))
 // const MyPost = lazy(() => import("../pages/MyPost"))
@@ -88,6 +89,11 @@ export default function Router() {
             <Route path="users" element={<AdminUsers />} />
             <Route path="products" element={<AdminProducts />} />
           </Route>
+          <Route path="/checkout" element={
+            <RequireAuth roles={["USER", "ADMIN"]}>
+              <Checkout />
+            </RequireAuth>
+          } />
         </Routes>
       </Suspense>
     </BrowserRouter>
