@@ -36,3 +36,42 @@ export const getOrder = async (
 ) => {
   return api.get(`/orders/${orderId}`)
 }
+
+export type OrderStatus =
+  | "PENDING"
+  | "CONFIRMED"
+  | "SHIPPED"
+  | "CANCELLED"
+
+export interface OrderItem {
+  _id: string
+  title: string
+  price: number
+  quantity: number
+}
+
+export interface OrderUser {
+  _id: string
+  email: string
+}
+
+export interface Order {
+  _id: string
+  user: OrderUser
+  products: OrderItem[]
+  totalAmount: number
+  status: OrderStatus
+  createdAt: string
+}
+
+export interface DashboardStats {
+  totalOrders: number
+  pendingOrders: number
+  revenue: number
+  customers: number
+  recentOrders: Order[]
+}
+
+export const getDashboardStats = () => {
+  return api.get<DashboardStats>("/orders/dashboard")
+}
