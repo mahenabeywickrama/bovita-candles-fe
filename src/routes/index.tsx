@@ -15,9 +15,6 @@ const AdminProducts = lazy(() => import("../pages/AdminProducts"))
 const AdminOrders = lazy(() => import("../pages/AdminOrders"))
 const Checkout = lazy(() => import("../pages/Checkout"))
 
-// const Post = lazy(() => import("../pages/Post"))
-// const MyPost = lazy(() => import("../pages/MyPost"))
-
 type RequireAuthTypes = { children: ReactNode; roles?: string[] }
 
 const RequireAuth = ({ children, roles }: RequireAuthTypes) => {
