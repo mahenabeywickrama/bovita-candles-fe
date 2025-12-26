@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { getAllOrders, getOrder, updateOrderStatus } from "../services/order"
+import { getAllOrders, getOrder, getReport, updateOrderStatus } from "../services/order"
 
 export default function AdminOrders() {
   const [orders, setOrders] = useState<any[]>([])
@@ -43,11 +43,37 @@ export default function AdminOrders() {
     }
   }
 
+  const handleGenerateReport = async () => {
+    try {
+      const res = await getReport()
+
+      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const link = document.createElement("a")
+      link.href = url
+      link.setAttribute("download", "orders-report.pdf")
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch (err) {
+      console.error("Failed to generate report", err)
+      alert("Report generation failed")
+    }
+  }
+
   if (loading) return <p className="p-10">Loading orders...</p>
 
   return (
     <div className="p-10">
-      <h1 className="text-3xl font-bold mb-6">Orders</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+
+        <button
+          onClick={handleGenerateReport}
+          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+        >
+          Generate Report (PDF)
+        </button>
+      </div>
 
       {/* FILTER */}
       <div className="mb-6 flex gap-4 items-center">

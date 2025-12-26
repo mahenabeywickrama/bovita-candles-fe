@@ -91,3 +91,7 @@ export interface DashboardStats {
 export const getDashboardStats = () => {
   return api.get<DashboardStats>("/orders/dashboard")
 }
+
+export const getReport = () => {
+  return api.get("/orders/report", { responseType: "blob" })
+}
