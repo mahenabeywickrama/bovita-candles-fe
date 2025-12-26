@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react"
-import { type DashboardStats, getDashboardStats, type Order } from "../services/order"
+import {
+  type DashboardStats,
+  getDashboardStats,
+  type Order,
+  type OrderStatus
+} from "../services/order"
 import { Link } from "react-router-dom"
 import {
   PieChart,
@@ -13,6 +18,15 @@ import {
   Tooltip,
   CartesianGrid
 } from "recharts"
+
+const STATUS_COLORS: Record<OrderStatus, string> = {
+  PENDING: "#FACC15",
+  CONFIRMED: "#60A5FA",
+  SHIPPED: "#A78BFA",
+  CANCELLED: "#F87171"
+}
+
+/* ---------------- COMPONENT ---------------- */
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
@@ -33,65 +47,89 @@ export default function AdminDashboard() {
     loadDashboard()
   }, [])
 
-  if (loading) {
-    return <p className="p-6">Loading dashboard...</p>
-  }
+  if (loading) return <p className="p-6">Loading dashboard...</p>
+  if (!stats) return <p className="p-6 text-red-600">Failed to load dashboard</p>
 
-  if (!stats) {
-    return <p className="p-6 text-red-600">Failed to load dashboard</p>
-  }
+  /* -------- CHART DATA -------- */
 
-  const statusCount = stats.recentOrders.reduce<Record<string, number>>(
-    (acc, order) => {
-      acc[order.status] = (acc[order.status] || 0) + 1
-      return acc
-    },
-    {}
-  )
-
-  const orderStatusData = Object.entries(statusCount).map(
+  const orderStatusData = Object.entries(stats.orderStatusCounts).map(
     ([status, count]) => ({
       name: status,
       value: count
     })
   )
 
-  const STATUS_COLORS: Record<string, string> = {
-    PENDING: "#FACC15",
-    CONFIRMED: "#60A5FA",
-    SHIPPED: "#A78BFA",
-    CANCELLED: "#F87171"
-  }
-
+  let runningTotal = 0
   const revenueData = stats.recentOrders
     .slice()
     .reverse()
-    .map(order => ({
-      date: new Date(order.createdAt).toLocaleDateString(),
-      revenue: order.totalAmount
-    }))
+    .map(order => {
+      runningTotal += order.totalAmount
+      return {
+        date: new Date(order.createdAt).toLocaleDateString(),
+        revenue: runningTotal
+      }
+    })
 
   return (
     <div className="p-6">
-      {/* Header */}
       <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
 
-      {/* Stats Cards */}
+      {/* STATS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <DashboardCard title="Total Orders" value={stats.totalOrders} />
+        <DashboardCard title="Total Orders" value={stats.totalOrders} trend="12%" />
         <DashboardCard title="Pending Orders" value={stats.pendingOrders} />
         <DashboardCard
           title="Revenue"
           value={`LKR ${stats.revenue.toLocaleString()}`}
+          trend="8%"
         />
         <DashboardCard title="Customers" value={stats.customers} />
       </div>
 
-      {/* Recent Orders */}
-      <div className="bg-white shadow rounded-lg p-6 mb-8">
-        <h2 className="text-xl font-semibold mb-4">Recent Orders</h2>
+      {/* ALERTS + SUMMARY */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <Panel title="⚠️ Attention Required">
+          <ul className="space-y-2 text-sm text-red-600">
+            {stats.alerts.map((a, i) => (
+              <li key={i}>• {a}</li>
+            ))}
+          </ul>
+        </Panel>
 
-        <table className="w-full border-collapse">
+        <Panel title="Order Status Summary">
+          <div className="grid grid-cols-2 gap-4">
+            {Object.entries(stats.orderStatusCounts).map(
+              ([status, count]) => (
+                <div key={status} className="border rounded p-3 text-center">
+                  <p className="text-sm text-gray-500">{status}</p>
+                  <p className="text-xl font-bold">{count}</p>
+                </div>
+              )
+            )}
+          </div>
+        </Panel>
+      </div>
+
+      {/* SNAPSHOT */}
+      <Panel title="Today & This Week" className="mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Snapshot label="Orders Today" value={stats.snapshots.ordersToday.toString()} />
+          <Snapshot
+            label="Revenue Today"
+            value={`LKR ${stats.snapshots.revenueToday.toLocaleString()}`}
+          />
+          <Snapshot label="Orders This Week" value={stats.snapshots.ordersThisWeek.toString()} />
+          <Snapshot
+            label="Revenue This Week"
+            value={`LKR ${stats.snapshots.revenueThisWeek.toLocaleString()}`}
+          />
+        </div>
+      </Panel>
+
+      {/* RECENT ORDERS */}
+      <Panel title="Recent Orders" className="mb-8">
+        <table className="w-full text-sm">
           <thead>
             <tr className="text-left border-b">
               <th className="py-2">Order ID</th>
@@ -101,86 +139,126 @@ export default function AdminDashboard() {
               <th></th>
             </tr>
           </thead>
-
           <tbody>
             {stats.recentOrders.map(order => (
               <OrderRow key={order._id} order={order} />
             ))}
           </tbody>
         </table>
-      </div>
+      </Panel>
 
-      {/* Charts */}
+      {/* CHARTS */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Order Status Pie */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">
-            Order Status Distribution
-          </h2>
-
+        <Panel title="Order Status Distribution">
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
               <Pie data={orderStatusData} dataKey="value" nameKey="name" label>
                 {orderStatusData.map(entry => (
-                  <Cell key={entry.name} fill={STATUS_COLORS[entry.name]} />
+                  <Cell
+                    key={entry.name}
+                    fill={STATUS_COLORS[entry.name as OrderStatus]}
+                  />
                 ))}
               </Pie>
               <Tooltip />
             </PieChart>
           </ResponsiveContainer>
-        </div>
+        </Panel>
 
-        {/* Revenue Line Chart */}
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">
-            Revenue (Recent Orders)
-          </h2>
-
+        <Panel title="Revenue Growth">
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={revenueData}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis />
               <Tooltip />
-              <Line
-                type="monotone"
-                dataKey="revenue"
-                strokeWidth={2}
-              />
+              <Line type="monotone" dataKey="revenue" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
-        </div>
+        </Panel>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <ActionCard title="Manage Orders" link="/admin/orders" />
-        <ActionCard title="Manage Products" link="/admin/products" />
-        <ActionCard title="Manage Users" link="/admin/users" />
+      {/* ACTIVITY + TOP PRODUCTS */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Panel title="Recent Activity">
+          <ul className="space-y-2 text-sm">
+            {stats.activityFeed.map((item, i) => (
+              <li key={i}>• {item}</li>
+            ))}
+          </ul>
+        </Panel>
+
+        <Panel title="Top Selling Products">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="text-left border-b">
+                <th className="py-2">Product</th>
+                <th>Sold</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stats.topProducts.map(p => (
+                <tr key={p.name} className="border-b">
+                  <td className="py-2">{p.name}</td>
+                  <td>{p.sold}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Panel>
       </div>
     </div>
   )
 }
 
-/* ---------- COMPONENTS ---------- */
+/* ---------------- REUSABLES ---------------- */
 
 function DashboardCard({
   title,
-  value
+  value,
+  trend
 }: {
   title: string
   value: string | number
+  trend?: string
 }) {
   return (
     <div className="bg-white shadow rounded-lg p-5">
       <p className="text-gray-500 text-sm">{title}</p>
       <p className="text-2xl font-bold mt-2">{value}</p>
+      {trend && <p className="text-sm text-green-600 mt-1">▲ {trend}</p>}
+    </div>
+  )
+}
+
+function Panel({
+  title,
+  children,
+  className = ""
+}: {
+  title: string
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div className={`bg-white shadow rounded-lg p-6 ${className}`}>
+      <h2 className="text-lg font-semibold mb-4">{title}</h2>
+      {children}
+    </div>
+  )
+}
+
+function Snapshot({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border rounded-lg p-4 text-center">
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="text-xl font-bold mt-1">{value}</p>
     </div>
   )
 }
 
 function OrderRow({ order }: { order: Order }) {
-  const statusColors: Record<string, string> = {
+  const statusColors: Record<OrderStatus, string> = {
     PENDING: "bg-yellow-100 text-yellow-700",
     CONFIRMED: "bg-blue-100 text-blue-700",
     SHIPPED: "bg-purple-100 text-purple-700",
@@ -193,7 +271,7 @@ function OrderRow({ order }: { order: Order }) {
       <td>{order.user.email}</td>
       <td>
         <span
-          className={`px-2 py-1 text-sm rounded ${statusColors[order.status]}`}
+          className={`px-2 py-1 text-xs rounded ${statusColors[order.status]}`}
         >
           {order.status}
         </span>
@@ -208,23 +286,5 @@ function OrderRow({ order }: { order: Order }) {
         </Link>
       </td>
     </tr>
-  )
-}
-
-function ActionCard({
-  title,
-  link
-}: {
-  title: string
-  link: string
-}) {
-  return (
-    <Link
-      to={link}
-      className="bg-black text-white rounded-lg p-6 hover:bg-gray-800 transition"
-    >
-      <h3 className="text-lg font-semibold">{title}</h3>
-      <p className="text-sm mt-2 opacity-80">Go to {title}</p>
-    </Link>
   )
 }

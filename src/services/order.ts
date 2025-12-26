@@ -69,7 +69,23 @@ export interface DashboardStats {
   pendingOrders: number
   revenue: number
   customers: number
+
+  orderStatusCounts: Record<OrderStatus, number>
   recentOrders: Order[]
+
+  /* NEW */
+  alerts: string[]
+  activityFeed: string[]
+  topProducts: {
+    name: string
+    sold: number
+  }[]
+  snapshots: {
+    ordersToday: number
+    revenueToday: number
+    ordersThisWeek: number
+    revenueThisWeek: number
+  }
 }
 
 export const getDashboardStats = () => {
