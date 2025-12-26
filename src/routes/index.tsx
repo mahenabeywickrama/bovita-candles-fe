@@ -57,6 +57,10 @@ export default function Router() {
         <Routes>
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
+            {/* Auth pages */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            
             <Route path="/products" element={<Products />} />
 
             {/* User Dashboard */}
@@ -68,10 +72,6 @@ export default function Router() {
                 </RequireAuth>
               }
             />
-
-            {/* Auth pages */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
           </Route>
 
           {/* Admin dashboard uses a separate layout with sidebar */}
