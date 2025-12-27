@@ -31,6 +31,48 @@ export default function Checkout() {
   )
 
   // ✅ ORDER IS CREATED HERE
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault()
+
+  //   if (cart.length === 0) {
+  //     alert("Cart is empty")
+  //     return
+  //   }
+
+  //   try {
+  //     setLoading(true)
+
+  //     // const orderPayload = {
+  //     //   items: cart.map(item => ({
+  //     //     productId: item.product._id,
+  //     //     quantity: item.quantity,
+  //     //     price: item.product.price
+  //     //   })),
+  //     //   shippingInfo,
+  //     //   paymentMethod,
+  //     //   totalAmount: total
+  //     // }
+
+  //     const orderPayload = {
+  //       items: cart.map(item => ({
+  //         productId: item.product._id,
+  //         quantity: item.quantity
+  //       }))
+  //     }
+
+  //     await createOrder(orderPayload)
+
+  //     clearCart()
+  //     setSubmitted(true)
+
+  //   } catch (error) {
+  //     console.error(error)
+  //     alert("Failed to place order")
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -42,17 +84,6 @@ export default function Checkout() {
     try {
       setLoading(true)
 
-      // const orderPayload = {
-      //   items: cart.map(item => ({
-      //     productId: item.product._id,
-      //     quantity: item.quantity,
-      //     price: item.product.price
-      //   })),
-      //   shippingInfo,
-      //   paymentMethod,
-      //   totalAmount: total
-      // }
-
       const orderPayload = {
         items: cart.map(item => ({
           productId: item.product._id,
@@ -60,14 +91,44 @@ export default function Checkout() {
         }))
       }
 
-      await createOrder(orderPayload)
+      // 1️⃣ Create order
+      const res = await createOrder(orderPayload)
 
+      const orderId = res.data._id
+
+      // 2️⃣ If card → redirect to PayHere
+      if (paymentMethod === "card") {
+        const paymentRes = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/v1/payments/payhere/${orderId}`
+        )
+
+        const paymentData = await paymentRes.json()
+
+        // PayHere redirect
+        const form = document.createElement("form")
+        form.method = "POST"
+        form.action = "https://sandbox.payhere.lk/pay/checkout"
+
+        Object.entries(paymentData).forEach(([key, value]) => {
+          const input = document.createElement("input")
+          input.type = "hidden"
+          input.name = key
+          input.value = String(value)
+          form.appendChild(input)
+        })
+
+        document.body.appendChild(form)
+        form.submit()
+        return
+      }
+
+      // 3️⃣ COD success
       clearCart()
       setSubmitted(true)
 
-    } catch (error) {
-      console.error(error)
-      alert("Failed to place order")
+    } catch (err) {
+      console.error(err)
+      alert("Checkout failed")
     } finally {
       setLoading(false)
     }
