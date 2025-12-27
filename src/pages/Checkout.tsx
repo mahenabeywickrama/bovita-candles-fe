@@ -30,49 +30,6 @@ export default function Checkout() {
     0
   )
 
-  // ✅ ORDER IS CREATED HERE
-  // const handleSubmit = async (e: React.FormEvent) => {
-  //   e.preventDefault()
-
-  //   if (cart.length === 0) {
-  //     alert("Cart is empty")
-  //     return
-  //   }
-
-  //   try {
-  //     setLoading(true)
-
-  //     // const orderPayload = {
-  //     //   items: cart.map(item => ({
-  //     //     productId: item.product._id,
-  //     //     quantity: item.quantity,
-  //     //     price: item.product.price
-  //     //   })),
-  //     //   shippingInfo,
-  //     //   paymentMethod,
-  //     //   totalAmount: total
-  //     // }
-
-  //     const orderPayload = {
-  //       items: cart.map(item => ({
-  //         productId: item.product._id,
-  //         quantity: item.quantity
-  //       }))
-  //     }
-
-  //     await createOrder(orderPayload)
-
-  //     clearCart()
-  //     setSubmitted(true)
-
-  //   } catch (error) {
-  //     console.error(error)
-  //     alert("Failed to place order")
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -84,31 +41,33 @@ export default function Checkout() {
     try {
       setLoading(true)
 
+      // 1️⃣ Create order in backend
       const orderPayload = {
         items: cart.map(item => ({
           productId: item.product._id,
           quantity: item.quantity
-        }))
+        })),
+        shippingInfo,
+        paymentMethod,
+        totalAmount: total
       }
 
-      // 1️⃣ Create order
       const res = await createOrder(orderPayload)
-
       const orderId = res.data._id
 
-      // 2️⃣ If card → redirect to PayHere
+      // 2️⃣ If payment is card → redirect to PayHere
       if (paymentMethod === "card") {
         const paymentRes = await fetch(
           `${import.meta.env.VITE_API_URL}/api/v1/payments/payhere/${orderId}`,
-          { method: "POST", headers: { "Content-Type": "application/json" } }
+          { method: "POST" }
         )
 
         const paymentData = await paymentRes.json()
 
-        // PayHere redirect
+        // Create a form dynamically to POST to PayHere
         const form = document.createElement("form")
         form.method = "POST"
-        form.action = "https://sandbox.payhere.lk/pay/checkout"
+        form.action = "https://sandbox.payhere.lk/pay/checkout" // sandbox for testing
 
         Object.entries(paymentData).forEach(([key, value]) => {
           const input = document.createElement("input")
@@ -119,11 +78,11 @@ export default function Checkout() {
         })
 
         document.body.appendChild(form)
-        form.submit()
+        form.submit() // redirects user to PayHere checkout
         return
       }
 
-      // 3️⃣ COD success
+      // 3️⃣ Cash on Delivery → order complete
       clearCart()
       setSubmitted(true)
 
@@ -160,7 +119,6 @@ export default function Checkout() {
         {/* LEFT */}
         <div>
           <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
-
           <div className="border rounded-lg p-4 space-y-4">
             {cart.map(item => (
               <div key={item.product._id} className="flex gap-4 items-center">
@@ -168,12 +126,10 @@ export default function Checkout() {
                   src={item.product.imageUrls[0]}
                   className="w-20 h-20 object-cover rounded"
                 />
-
                 <div className="flex-1">
                   <h3 className="font-semibold">{item.product.title}</h3>
                   <p>Rs. {item.product.price}</p>
                 </div>
-
                 <input
                   type="number"
                   min={1}
@@ -183,7 +139,6 @@ export default function Checkout() {
                   }
                   className="w-16 border px-2 py-1 rounded"
                 />
-
                 <button
                   onClick={() => removeFromCart(item.product._id)}
                   className="text-red-600"
@@ -192,7 +147,6 @@ export default function Checkout() {
                 </button>
               </div>
             ))}
-
             <div className="text-right font-bold text-xl">
               Total: Rs. {total}
             </div>
@@ -202,7 +156,6 @@ export default function Checkout() {
         {/* RIGHT */}
         <div>
           <h2 className="text-xl font-semibold mb-4">Shipping Information</h2>
-
           <form className="space-y-4" onSubmit={handleSubmit}>
             <input name="name" placeholder="Full Name" onChange={handleInputChange} required />
             <input name="email" placeholder="Email" onChange={handleInputChange} required />
