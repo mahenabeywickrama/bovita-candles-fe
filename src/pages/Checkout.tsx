@@ -99,7 +99,8 @@ export default function Checkout() {
       // 2️⃣ If card → redirect to PayHere
       if (paymentMethod === "card") {
         const paymentRes = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/v1/payments/payhere/${orderId}`
+          `${import.meta.env.VITE_API_URL}/api/v1/payments/payhere/${orderId}`,
+          { method: "POST", headers: { "Content-Type": "application/json" } }
         )
 
         const paymentData = await paymentRes.json()
