@@ -41,7 +41,6 @@ export default function Checkout() {
     try {
       setLoading(true)
 
-      // 1️⃣ Create order in backend
       const orderPayload = {
         items: cart.map(item => ({
           productId: item.product._id,
@@ -55,7 +54,6 @@ export default function Checkout() {
       const res = await createOrder(orderPayload)
       const orderId = res.data._id
 
-      // 2️⃣ If payment is card → redirect to PayHere
       if (paymentMethod === "card") {
         const paymentRes = await fetch(
           `${import.meta.env.VITE_API_URL}/api/v1/payments/payhere/${orderId}`,
@@ -64,10 +62,9 @@ export default function Checkout() {
 
         const paymentData = await paymentRes.json()
 
-        // Create a form dynamically to POST to PayHere
         const form = document.createElement("form")
         form.method = "POST"
-        form.action = "https://sandbox.payhere.lk/pay/checkout" // sandbox for testing
+        form.action = "https://sandbox.payhere.lk/pay/checkout"
 
         Object.entries(paymentData).forEach(([key, value]) => {
           const input = document.createElement("input")
@@ -78,11 +75,10 @@ export default function Checkout() {
         })
 
         document.body.appendChild(form)
-        form.submit() // redirects user to PayHere checkout
+        form.submit()
         return
       }
 
-      // 3️⃣ Cash on Delivery → order complete
       clearCart()
       setSubmitted(true)
 
