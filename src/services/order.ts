@@ -11,6 +11,10 @@ export const createOrder = async (orderPayload: OrderPayload) => {
   return api.post("/orders/create", orderPayload)
 }
 
+export const getMyOrders = async () => {
+  return api.get("/orders/my")
+}
+
 export const getAllOrders = async (
   status: string,
   page: number
