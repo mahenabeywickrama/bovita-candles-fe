@@ -117,24 +117,22 @@ export default function UserDashboard() {
                   </span>
 
                   <button
-                  onClick={async (e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-
-                    setModalLoading(true)
-                    try {
-                      const res = await getOrder(order._id)
-                      setSelectedOrder(res.data)
-                    } catch {
-                      console.error("Failed to load order")
-                    } finally {
-                      setModalLoading(false)
-                    }
-                  }}
-                  className="text-blue-600 hover:underline text-sm"
-                >
-                  View
-                </button>
+                    disabled={modalLoading}
+                    onClick={async () => {
+                      setModalLoading(true)
+                      try {
+                        const res = await getOrder(order._id)
+                        setSelectedOrder(res.data)
+                      } catch {
+                        console.error("Failed to load order")
+                      } finally {
+                        setModalLoading(false)
+                      }
+                    }}
+                    className="text-blue-600 hover:underline text-sm disabled:opacity-50"
+                  >
+                    {modalLoading ? "Loading..." : "View"}
+                  </button>
                 </div>
               </div>
             ))}
