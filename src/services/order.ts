@@ -41,6 +41,12 @@ export const getOrder = async (
   return api.get(`/orders/${orderId}`)
 }
 
+export const getOrderFromUser = async (
+  orderId: string
+) => {
+  return api.get(`/orders/my/${orderId}`)
+}
+
 export type OrderStatus =
   | "PENDING"
   | "CONFIRMED"

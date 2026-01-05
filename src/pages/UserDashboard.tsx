@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "../context/authContext"
-import { getMyOrders, getOrder } from "../services/order"
+import { getMyOrders, getOrderFromUser } from "../services/order"
 
 type Order = {
   _id: string
@@ -121,7 +121,7 @@ export default function UserDashboard() {
                     onClick={async () => {
                       setModalLoading(true)
                       try {
-                        const res = await getOrder(order._id)
+                        const res = await getOrderFromUser(order._id)
                         setSelectedOrder(res.data)
                       } catch {
                         console.error("Failed to load order")
