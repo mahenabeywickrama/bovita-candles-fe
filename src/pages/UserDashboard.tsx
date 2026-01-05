@@ -34,6 +34,15 @@ export default function UserDashboard() {
   const [loading, setLoading] = useState(true)
   const [selectedOrder, setSelectedOrder] = useState<OrderDetails | null>(null)
   const [loadingOrderId, setLoadingOrderId] = useState<string | null>(null)
+  const ITEMS_PER_PAGE = 5
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const totalPages = Math.ceil(orders.length / ITEMS_PER_PAGE)
+
+  const paginatedOrders = orders.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  )
 
   const handleLogout = () => {
     localStorage.removeItem("accessToken")
@@ -47,6 +56,7 @@ export default function UserDashboard() {
       try {
         const res = await getMyOrders()
         setOrders(res.data)
+        setCurrentPage(1)
       } catch (error) {
         console.error("Failed to load orders")
       } finally {
@@ -82,7 +92,7 @@ export default function UserDashboard() {
           <p className="text-gray-500">You haven’t placed any orders yet.</p>
         ) : (
           <div className="space-y-3">
-            {orders.map(order => (
+            {paginatedOrders.map(order => (
               <div
                 key={order._id}
                 className="flex justify-between items-center border rounded-lg p-4 hover:bg-gray-50"
@@ -139,6 +149,44 @@ export default function UserDashboard() {
           </div>
         )}
       </div>
+
+      {/* -------- PAGINATION -------- */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(p => p - 1)}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Prev
+          </button>
+
+          {Array.from({ length: totalPages }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentPage(i + 1)}
+              className={`px-3 py-1 border rounded
+                ${
+                  currentPage === i + 1
+                    ? "bg-blue-600 text-white"
+                    : "hover:bg-gray-100"
+                }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(p => p + 1)}
+            className="px-3 py-1 border rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+
+        </div>
+      )}
 
       {/* -------- ORDER DETAILS MODAL -------- */}
       {selectedOrder && (
