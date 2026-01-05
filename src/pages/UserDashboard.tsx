@@ -33,7 +33,7 @@ export default function UserDashboard() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedOrder, setSelectedOrder] = useState<OrderDetails | null>(null)
-  const [modalLoading, setModalLoading] = useState(false)
+  const [loadingOrderId, setLoadingOrderId] = useState<string | null>(null)
 
   const handleLogout = () => {
     localStorage.removeItem("accessToken")
@@ -117,21 +117,21 @@ export default function UserDashboard() {
                   </span>
 
                   <button
-                    disabled={modalLoading}
+                    disabled={loadingOrderId === order._id}
                     onClick={async () => {
-                      setModalLoading(true)
+                      setLoadingOrderId(order._id)
                       try {
                         const res = await getOrderFromUser(order._id)
                         setSelectedOrder(res.data)
                       } catch {
                         console.error("Failed to load order")
                       } finally {
-                        setModalLoading(false)
+                        setLoadingOrderId(null)
                       }
                     }}
                     className="text-blue-600 hover:underline text-sm disabled:opacity-50"
                   >
-                    {modalLoading ? "Loading..." : "View"}
+                    {loadingOrderId === order._id ? "Loading..." : "View"}
                   </button>
                 </div>
               </div>
