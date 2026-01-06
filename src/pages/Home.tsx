@@ -1,157 +1,201 @@
 import { useNavigate } from "react-router-dom"
+import { motion } from "framer-motion"
+import Particles from "react-tsparticles"
+import { loadFull } from "tsparticles"
 
 export default function Home() {
   const navigate = useNavigate()
 
+  const fadeUp = { initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.6 } }
+  const fadeUpDelay = (i: number) => ({ initial: { opacity: 0, y: 20 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.6, delay: i * 0.2 } })
+
+  const particlesInit = async (main: any) => {
+    await loadFull(main)
+  }
+
   return (
-    <div className="overflow-hidden">
+    <div className="space-y-32 overflow-x-hidden">
 
       {/* ================= HERO ================= */}
-      <section className="relative h-[90vh] flex items-center justify-center bg-gradient-to-br from-amber-50 via-rose-50 to-orange-50">
-        <div className="absolute inset-0 bg-white/60 backdrop-blur-sm" />
+      <section className="relative w-full overflow-hidden bg-gradient-to-br from-amber-50 via-rose-50 to-orange-100">
+        {/* Particles */}
+        <Particles
+          id="hero-particles"
+          init={particlesInit}
+          options={{
+            fullScreen: { enable: false },
+            fpsLimit: 60,
+            particles: {
+              number: { value: 30 },
+              color: { value: ["#fbbf24", "#f43f5e", "#fde68a"] },
+              shape: { type: "circle" },
+              opacity: { value: 0.3, random: true },
+              size: { value: 4, random: { enable: true, minimumValue: 2 } },
+              move: { enable: true, speed: 0.8, direction: "top", outModes: "out" },
+            },
+          }}
+          className="absolute inset-0"
+        />
 
-        <div className="relative z-10 max-w-4xl text-center px-6">
-          <p className="uppercase tracking-widest text-sm text-rose-600 mb-4">
-            Handcrafted • Eco-Friendly • Elegant
-          </p>
+        {/* Floating shapes */}
+        <div className="absolute top-[-50px] left-[-50px] w-40 h-40 rounded-full bg-rose-200 opacity-30 animate-pulse-slow" />
+        <div className="absolute bottom-[-50px] right-[-50px] w-60 h-60 rounded-full bg-amber-200 opacity-20 animate-pulse-slower" />
 
-          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 leading-tight">
-            Light a Candle.
-            <br />
-            <span className="text-rose-600">Set the Mood.</span>
-          </h1>
+        <div className="relative min-h-[90vh] flex items-center justify-center px-6 z-10">
+          <motion.div className="max-w-4xl text-center space-y-6" {...fadeUp}>
+            <p className="uppercase tracking-[0.3em] text-xs text-rose-600 mb-2">
+              Handcrafted Luxury Candles
+            </p>
+            <h1 className="text-4xl md:text-6xl font-extrabold text-gray-900 leading-tight">
+              Light the Moment.<br />
+              <span className="text-rose-600">Feel the Calm.</span>
+            </h1>
+            <p className="mt-6 text-lg text-gray-600 max-w-2xl mx-auto">
+              Thoughtfully hand-poured candles designed to elevate your space, mood, and rituals — one flame at a time.
+            </p>
 
-          <p className="mt-6 text-gray-600 text-lg max-w-2xl mx-auto">
-            Bovita Candles are hand-poured with care using natural wax and
-            premium fragrances to bring calm, warmth, and beauty into your space.
-          </p>
+            <div className="mt-12 flex justify-center gap-5 flex-wrap">
+              <motion.button
+                whileHover={{ scale: 1.07, boxShadow: "0 0 25px rgba(220,38,38,0.5)" }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate("/products")}
+                className="bg-rose-600 hover:bg-rose-700 text-white px-12 py-4 rounded-full text-lg shadow-xl transition"
+              >
+                Shop Collection
+              </motion.button>
 
-          <div className="mt-10 flex justify-center gap-4 flex-wrap">
-            <button
-              onClick={() => navigate("/products")}
-              className="bg-rose-600 hover:bg-rose-700 text-white px-10 py-4 rounded-full text-lg shadow-lg transition"
-            >
-              Shop Candles
-            </button>
-
-            <button
-              onClick={() => navigate("/about")}
-              className="px-10 py-4 rounded-full text-lg border border-gray-300 hover:bg-gray-100 transition"
-            >
-              Our Story
-            </button>
-          </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigate("/about")}
+                className="px-12 py-4 rounded-full text-lg border border-gray-300 hover:bg-white transition"
+              >
+                Learn More
+              </motion.button>
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* ================= FEATURED PRODUCTS ================= */}
-      <section className="max-w-7xl mx-auto px-6 py-24">
-        <div className="text-center mb-14">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-            Featured Collection
-          </h2>
-          <p className="text-gray-600 mt-3 max-w-xl mx-auto">
-            Our most loved candles — crafted to elevate your everyday moments.
-          </p>
+      {/* ================= CATEGORIES ================= */}
+      <section className="w-full px-6">
+        <div className="text-center mb-16">
+          <motion.h2 {...fadeUp} className="text-3xl md:text-4xl font-bold text-gray-900">
+            Shop by Mood
+          </motion.h2>
+          <motion.p {...fadeUp} className="text-gray-600 mt-4">
+            Every candle tells a story — choose yours.
+          </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-10">
-          {[1, 2, 3].map((item) => (
-            <div
-              key={item}
-              className="group bg-white rounded-2xl shadow-md hover:shadow-xl transition overflow-hidden"
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+          {[
+            { title: "Relax & Unwind", emoji: "🌿" },
+            { title: "Romantic Evenings", emoji: "❤️" },
+            { title: "Luxury Gifts", emoji: "🎁" },
+          ].map((cat, i) => (
+            <motion.div
+              key={i}
+              whileHover={{ scale: 1.06, rotate: 1, boxShadow: "0 10px 25px rgba(0,0,0,0.12)" }}
+              onClick={() => navigate("/products")}
+              className="cursor-pointer bg-white rounded-2xl shadow-md transition p-10 text-center"
             >
-              {/* Image */}
-              <div className="h-64 bg-gradient-to-br from-gray-100 to-gray-200 group-hover:scale-105 transition-transform" />
-
-              {/* Content */}
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Lavender Bliss
-                </h3>
-                <p className="text-sm text-gray-500 mt-1">
-                  Soft floral aroma for relaxation
-                </p>
-
-                <div className="flex justify-between items-center mt-5">
-                  <span className="text-lg font-bold text-gray-900">
-                    Rs. 2,500
-                  </span>
-
-                  <button
-                    onClick={() => navigate("/products")}
-                    className="text-rose-600 font-medium hover:underline"
-                  >
-                    View →
-                  </button>
-                </div>
-              </div>
-            </div>
+              <div className="text-6xl mb-6">{cat.emoji}</div>
+              <h3 className="text-xl font-semibold">{cat.title}</h3>
+              <p className="text-gray-500 mt-3">
+                Discover scents crafted for this mood.
+              </p>
+            </motion.div>
           ))}
         </div>
       </section>
 
-      {/* ================= BRAND VALUES ================= */}
-      <section className="bg-rose-50 py-24">
-        <div className="max-w-6xl mx-auto px-6">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-16">
-            Crafted With Intention
-          </h2>
+      {/* ================= FEATURED PRODUCTS ================= */}
+      <section className="w-full px-6">
+        <div className="text-center mb-16">
+          <motion.h2 {...fadeUp} className="text-3xl md:text-4xl font-bold text-gray-900">
+            Best Sellers
+          </motion.h2>
+          <motion.p {...fadeUp} className="text-gray-600 mt-4">
+            Loved by customers across the island.
+          </motion.p>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-            <div>
-              <div className="text-5xl mb-5">🌿</div>
-              <h3 className="text-xl font-semibold text-gray-900">
-                Natural Ingredients
-              </h3>
-              <p className="text-gray-600 mt-3">
-                Made using eco-friendly wax and safe, high-quality fragrances.
-              </p>
-            </div>
+        <div className="flex overflow-x-auto gap-6 pb-4 -mx-6 px-6">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <motion.div
+              key={i}
+              whileHover={{ scale: 1.05, rotate: 1 }}
+              className="min-w-[280px] bg-white rounded-2xl shadow-md hover:shadow-xl transition overflow-hidden cursor-pointer"
+              onClick={() => navigate("/products")}
+            >
+              <div className="h-72 bg-gradient-to-br from-gray-100 to-gray-200 relative">
+                {/* Optional small floating glow */}
+                <div className="absolute top-2 left-2 w-6 h-6 rounded-full bg-rose-200 opacity-40 animate-pulse-slow"></div>
+              </div>
+              <div className="p-6">
+                <h3 className="text-lg font-semibold">Lavender Serenity</h3>
+                <p className="text-sm text-gray-500 mt-1">Calming floral aroma</p>
+                <div className="flex justify-between items-center mt-5">
+                  <span className="text-lg font-bold">Rs. 2,500</span>
+                  <button className="text-rose-600 font-medium hover:underline">View →</button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
 
-            <div>
-              <div className="text-5xl mb-5">🕯️</div>
-              <h3 className="text-xl font-semibold text-gray-900">
-                Hand-Poured
-              </h3>
-              <p className="text-gray-600 mt-3">
-                Every candle is carefully crafted in small batches.
-              </p>
-            </div>
+      {/* ================= SOCIAL PROOF ================= */}
+      <section className="w-full bg-rose-50 py-24 px-6">
+        <div className="max-w-6xl mx-auto text-center">
+          <motion.h2 {...fadeUp} className="text-3xl md:text-4xl font-bold text-gray-900 mb-16">
+            Loved by Our Customers
+          </motion.h2>
 
-            <div>
-              <div className="text-5xl mb-5">✨</div>
-              <h3 className="text-xl font-semibold text-gray-900">
-                Long-Lasting Aroma
-              </h3>
-              <p className="text-gray-600 mt-3">
-                Designed to fill your space with warmth for hours.
-              </p>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            {[
+              "Absolutely calming — my evenings feel different now.",
+              "The perfect gift. Packaging and scent are top-tier.",
+              "Burns evenly and lasts long. Worth every rupee.",
+            ].map((review, i) => (
+              <motion.div
+                key={i}
+                {...fadeUpDelay(i)}
+                className="bg-white p-8 rounded-2xl shadow hover:scale-105 transition"
+              >
+                <p className="text-gray-600 italic">“{review}”</p>
+                <p className="mt-5 font-semibold">★★★★★</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* ================= FINAL CTA ================= */}
-      <section className="bg-gray-900 py-20">
-        <div className="max-w-5xl mx-auto px-6 text-center text-white">
-          <h2 className="text-3xl md:text-4xl font-bold">
-            Find Your Signature Scent
-          </h2>
+      <section className="w-full bg-gray-900 py-24 px-6 relative overflow-hidden">
+        <div className="absolute top-[-50px] left-[-50px] w-32 h-32 rounded-full bg-rose-600 opacity-20 animate-pulse-slow" />
+        <div className="absolute bottom-[-50px] right-[-50px] w-40 h-40 rounded-full bg-amber-400 opacity-20 animate-pulse-slower" />
 
-          <p className="mt-4 text-gray-300 max-w-xl mx-auto">
-            Whether it’s calm, romance, or focus — there’s a Bovita candle for you.
-          </p>
+        <div className="max-w-5xl mx-auto text-center text-white space-y-6 relative z-10">
+          <motion.h2 {...fadeUp} className="text-3xl md:text-4xl font-bold">
+            Create Your Perfect Atmosphere
+          </motion.h2>
 
-          <button
+          <motion.p {...fadeUp} className="text-gray-300 max-w-xl mx-auto">
+            Whether it’s calm, warmth, or celebration — Bovita has a candle for it.
+          </motion.p>
+
+          <motion.button
+            whileHover={{ scale: 1.07, boxShadow: "0 0 35px rgba(220,38,38,0.6)" }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => navigate("/products")}
-            className="mt-8 bg-rose-600 hover:bg-rose-700 px-12 py-4 rounded-full text-lg font-semibold shadow-lg transition"
+            className="mt-10 bg-rose-600 hover:bg-rose-700 px-14 py-4 rounded-full text-lg font-semibold transition"
           >
-            Explore Collection
-          </button>
+            Explore Candles
+          </motion.button>
         </div>
       </section>
-
     </div>
   )
 }
