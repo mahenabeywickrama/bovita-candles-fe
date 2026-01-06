@@ -29,11 +29,14 @@ A modern, responsive e-commerce frontend for **Bovita Candles**, designed to sho
 
 ## 📸 Screenshots
 
-> Add screenshots inside a `/screenshots` folder and reference them below:
+### Home Page
+![Home Page](screenshots/home.png)
 
-- Home Page: `screenshots/home.png`
-- Products Page: `screenshots/products.png`
-- Login / Register: `screenshots/auth.png`
+### Products Page
+![Products Page](screenshots/products.png)
+
+### Login / Register
+![Auth Page](screenshots/auth.png)
 
 ---
 
@@ -61,7 +64,7 @@ The frontend will be available at: `http://localhost:5173`
 
 ## 🌍 Deployment
 
-🔗 **Frontend Live Site:** [https://your-frontend-deployment-url.com](https://your-frontend-deployment-url.com)
+🔗 **Frontend Live Site:** [https://bovita-candles-fe.vercel.app](https://bovita-candles-fe.vercel.app)
 
 ---
 
