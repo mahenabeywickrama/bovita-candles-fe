@@ -1,85 +1,112 @@
-import { useState, type FormEvent } from "react"
-import { getMyDetails, login } from "../services/auth"
-import { useNavigate } from "react-router-dom"
-import { useAuth } from "../context/authContext"
+import { useState, type FormEvent } from "react";
+import { getMyDetails, login } from "../services/auth";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../context/authContext";
+import { FiLoader } from "react-icons/fi";
 
 export default function Login() {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const { setUser } = useAuth();
 
-  const { setUser } = useAuth()
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleLogin = async (e: FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     if (!email || !password) {
-      alert("All fields are required")
-      return
+      setError("All fields are required");
+      return;
     }
 
     try {
-      const res = await login(email, password)
+      setLoading(true);
+      setError("");
+
+      const res = await login(email, password);
 
       if (!res.data.accessToken) {
-        alert("Login failed")
-        return
+        setError("Login failed");
+        return;
       }
 
-      await localStorage.setItem("accessToken", res.data.accessToken)
-      await localStorage.setItem("refreshToken", res.data.refreshToken)
+      localStorage.setItem("accessToken", res.data.accessToken);
+      localStorage.setItem("refreshToken", res.data.refreshToken);
 
-      const detail = await getMyDetails()
-      console.log(detail)
+      const detail = await getMyDetails();
 
       if (!detail.data.isActive) {
-        alert("Your account is disabled. Contact admin.")
-        localStorage.removeItem("accessToken")
-        localStorage.removeItem("refreshToken")
-        return
+        setError("Your account is disabled. Contact admin.");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        return;
       }
 
-      setUser(detail.data)
-      navigate("/")
+      setUser(detail.data);
+      navigate("/");
     } catch (err) {
-      console.error(err)
-      alert("Login failed. Please check your credentials.")
+      console.error(err);
+      setError("Login failed. Please check your credentials.");
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   return (
-      <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">Login</h1>
+    <div className="min-h-screen w-full bg-gradient-to-b from-rose-50 via-amber-50 to-orange-100 flex items-center justify-center px-4">
+      <div className="bg-white shadow-2xl rounded-3xl p-10 w-full max-w-lg md:max-w-xl lg:max-w-2xl animate-fadeIn">
+        <h1 className="text-4xl font-extrabold text-center mb-6 text-gray-900">
+          Login
+        </h1>
 
-        <div className="flex flex-col gap-4">
-            <input
+        {error && (
+          <p className="mb-4 text-center text-red-600 font-medium">{error}</p>
+        )}
+
+        <form className="flex flex-col gap-5" onSubmit={handleLogin}>
+          <input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-
-            <input
+            className="w-full p-4 border rounded-xl focus:ring-2 focus:ring-rose-400 focus:outline-none transition"
+          />
+          <input
             type="password"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
+            className="w-full p-4 border rounded-xl focus:ring-2 focus:ring-rose-400 focus:outline-none transition"
+          />
 
-            <button
-            onClick={handleLogin}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-lg font-semibold transition"
-            >
-            Login
-            </button>
-        </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full py-3 bg-gradient-to-r from-rose-600 to-pink-600 text-white font-semibold rounded-xl shadow-lg hover:scale-105 hover:from-pink-600 hover:to-rose-600 transition flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <FiLoader className="animate-spin" />
+                Logging in...
+              </>
+            ) : (
+              "Login"
+            )}
+          </button>
+        </form>
 
-        <p className="mt-4 text-center text-gray-600">
-            Don't have an account?{" "}
-            <a href="/register" className="text-blue-600 hover:underline">Register</a>
+        <p className="mt-6 text-center text-gray-600">
+          Don't have an account?{" "}
+          <Link
+            to="/register"
+            className="text-rose-600 font-semibold hover:underline"
+          >
+            Register
+          </Link>
         </p>
       </div>
-    )
+    </div>
+  );
 }

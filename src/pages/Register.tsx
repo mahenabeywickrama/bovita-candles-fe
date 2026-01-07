@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from "react"
 import { register } from "../services/auth"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
+import { FiLoader } from "react-icons/fi"
 
 export default function Register() {
   const navigate = useNavigate()
@@ -10,21 +11,26 @@ export default function Register() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [conPassword, setConPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
 
   const handleRgister = async (e: FormEvent) => {
     e.preventDefault()
 
     if (!firstname || !lastname || !email || !password || !conPassword) {
-      alert("All fields are required.")
+      setError("All fields are required")
       return
     }
 
     if (password !== conPassword) {
-      alert("Password do not match.")
+      setError("Passwords do not match")
       return
     }
 
     try {
+      setLoading(true)
+      setError("")
+
       const obj = {
         firstname,
         lastname,
@@ -32,75 +38,102 @@ export default function Register() {
         password,
         role: "USER"
       }
-      const res: any = await register(obj)
-      console.log(res.data)
-      console.log(res.message)
 
-      alert(`Reginstration successful! Email: ${res?.data?.email}`)
+      const res: any = await register(obj)
+
+      alert(`Registration successful! Email: ${res?.data?.email}`)
       navigate("/login")
-      
-    } catch (err: any) {
-      console.error(err?.response?.data)
+    } catch (err) {
+      console.error(err)
+      setError("Registration failed. Please try again.")
+    } finally {
+      setLoading(false)
     }
   }
 
   return (
-    <div className="bg-white shadow-xl rounded-2xl p-8 w-full max-w-lg">
-        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">Create an Account</h1>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-b from-rose-50 via-amber-50 to-orange-100 px-4">
+      <div className="bg-white shadow-2xl rounded-3xl p-10 w-full max-w-lg md:max-w-xl animate-fadeIn">
+        <h1 className="text-4xl font-extrabold text-center mb-6 text-gray-900">
+          Create an Account
+        </h1>
+
+        {error && (
+          <p className="mb-4 text-center text-red-600 font-medium">{error}</p>
+        )}
+
+        <form onSubmit={handleRgister}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             <input
-            type="text"
-            placeholder="First Name"
-            value={firstname}
-            onChange={(e) => setFirstname(e.target.value)}
-            className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              type="text"
+              placeholder="First Name"
+              value={firstname}
+              onChange={(e) => setFirstname(e.target.value)}
+              className="p-4 border rounded-xl focus:ring-2 focus:ring-rose-400 focus:outline-none transition"
             />
 
             <input
-            type="text"
-            placeholder="Last Name"
-            value={lastname}
-            onChange={(e) => setLastname(e.target.value)}
-            className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              type="text"
+              placeholder="Last Name"
+              value={lastname}
+              onChange={(e) => setLastname(e.target.value)}
+              className="p-4 border rounded-xl focus:ring-2 focus:ring-rose-400 focus:outline-none transition"
             />
 
             <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="col-span-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="col-span-full p-4 border rounded-xl focus:ring-2 focus:ring-rose-400 focus:outline-none transition"
             />
 
             <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="p-4 border rounded-xl focus:ring-2 focus:ring-rose-400 focus:outline-none transition"
             />
 
             <input
-            type="password"
-            placeholder="Confirm Password"
-            value={conPassword}
-            onChange={(e) => setConPassword(e.target.value)}
-            className="p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+              type="password"
+              placeholder="Confirm Password"
+              value={conPassword}
+              onChange={(e) => setConPassword(e.target.value)}
+              className="p-4 border rounded-xl focus:ring-2 focus:ring-rose-400 focus:outline-none transition"
             />
-        </div>
+          </div>
 
-        <button
-            onClick={handleRgister}
-            className="w-full mt-6 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg text-lg font-semibold transition"
-        >
-            Register
-        </button>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full mt-8 py-3 bg-gradient-to-r from-rose-600 to-pink-600
+              text-white font-semibold rounded-xl shadow-lg
+              hover:scale-105 hover:from-pink-600 hover:to-rose-600
+              transition flex items-center justify-center gap-2"
+          >
+            {loading ? (
+              <>
+                <FiLoader className="animate-spin" />
+                Creating account...
+              </>
+            ) : (
+              "Register"
+            )}
+          </button>
+        </form>
 
-        <p className="mt-4 text-center text-gray-600">
-            Already have an account?{" "}
-            <a href="/login" className="text-blue-600 hover:underline">Login</a>
+        <p className="mt-6 text-center text-gray-600">
+          Already have an account?{" "}
+          <Link
+            to="/login"
+            className="text-rose-600 font-semibold hover:underline"
+          >
+            Login
+          </Link>
         </p>
+      </div>
     </div>
-    )
+  )
 }

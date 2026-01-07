@@ -6,7 +6,7 @@ function Layout() {
   const location = useLocation()
   const authPages = ["/login", "/register"]
   const isAuthPage = authPages.includes(location.pathname)
-  const isMainPage = location.pathname === "/" || location.pathname === "/products"
+  const isMainPage = location.pathname === "/" || location.pathname === "/products" || location.pathname === "/login" || location.pathname === "/register"
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
