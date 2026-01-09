@@ -148,7 +148,7 @@ export default function AdminProducts() {
 
               <h2 className="text-xl font-semibold mt-2">{p.title}</h2>
               <p className="text-gray-600">{p.category}</p>
-              <p className="font-bold text-green-600 mt-1">${p.price}</p>
+              <p className="font-bold text-green-600 mt-1">Rs. {p.price}</p>
               <p className="text-sm text-gray-500">Stock: {p.stock}</p>
 
               <div className="flex justify-between mt-4">
